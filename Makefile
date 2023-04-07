@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0
+LLVM=1
 VERSION = 6
 PATCHLEVEL = 2
 SUBLEVEL = 0
@@ -754,7 +755,7 @@ endif
 
 ifeq ($(KBUILD_EXTMOD),)
 # Objects we will link into vmlinux / subdirs we need to visit
-core-y		:=
+core-y		+= thesis-syscall/
 drivers-y	:=
 libs-y		:= lib/
 endif # KBUILD_EXTMOD

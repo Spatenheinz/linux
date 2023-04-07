@@ -131,3 +131,24 @@ macro_rules! __rust_force_expr {
         $e
     };
 }
+
+/// a try version of vec!
+#[cfg(not(test))]
+#[macro_export]
+#[stable(feature = "rust1", since = "1.0.0")]
+#[macro_export]
+macro_rules! try_vec {
+    () => (
+        Ok(core::alloc::Vec::new())
+    );
+    ($elem:expr; $n:expr) => (
+        $crate::try_new_repeat_item($elem, $n)
+    );
+    ($($x:expr),+ $(,)?) => ({
+        let values = [$($x),+];
+        let layout = core::alloc::Layout::for_value(&values);
+        alloc::boxed::Box::try_new(values)
+            .map(|b| <[_]>::into_vec(b))
+            // .map_err::<core::alloc::TryReserveError, _>(|_| core::alloc::alloc_error(layout))
+    });
+}

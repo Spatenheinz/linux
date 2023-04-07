@@ -15,7 +15,7 @@ always-$(CONFIG_RUST) += libmacros.so
 no-clean-files += libmacros.so
 
 always-$(CONFIG_RUST) += bindings/bindings_generated.rs bindings/bindings_helpers_generated.rs
-obj-$(CONFIG_RUST) += alloc.o bindings.o kernel.o
+obj-$(CONFIG_RUST) += alloc.o bindings.o kernel.o memchr.o nom.o combine.o #capnp.o
 always-$(CONFIG_RUST) += exports_alloc_generated.h exports_bindings_generated.h \
     exports_kernel_generated.h
 
@@ -60,7 +60,8 @@ core-cfgs = \
 alloc-cfgs = \
     --cfg no_global_oom_handling \
     --cfg no_rc \
-    --cfg no_sync
+    --cfg no_sync \
+    -Zmacro-backtrace
 
 quiet_cmd_rustdoc = RUSTDOC $(if $(rustdoc_host),H, ) $<
       cmd_rustdoc = \
@@ -421,6 +422,42 @@ $(obj)/kernel.o: private rustc_target_flags = --extern alloc \
     --extern build_error --extern macros --extern bindings
 $(obj)/kernel.o: $(src)/kernel/lib.rs $(obj)/alloc.o $(obj)/build_error.o \
     $(obj)/libmacros.so $(obj)/bindings.o FORCE
+	$(call if_changed_dep,rustc_library)
+
+# added by me
+$(obj)/capnp.o: private skip_clippy = 1
+$(obj)/capnp.o: private skip_flags = -Dunreachable_pub
+$(obj)/capnp.o: private rustc_target_flags = --extern alloc \
+    --extern build_error --extern macros --extern bindings --extern kernel \
+    --extern core
+$(obj)/capnp.o: $(src)/capnp/lib.rs $(obj)/compiler_builtins.o $(obj)/std_macros.rs FORCE
+	$(call if_changed_dep,rustc_library)
+
+$(obj)/memchr.o: private skip_clippy = 1
+$(obj)/memchr.o: private skip_flags = -Dunreachable_pub
+$(obj)/memchr.o: private rustc_target_flags = --extern alloc \
+    --extern build_error --extern macros --extern bindings --extern kernel \
+    --extern core
+$(obj)/memchr.o: $(src)/memchr/lib.rs $(obj)/compiler_builtins.o $(obj)/std_macros.rs FORCE
+	$(call if_changed_dep,rustc_library)
+
+$(obj)/combine.o: private skip_clippy = 1
+$(obj)/combine.o: private skip_flags = -Dunreachable_pub
+$(obj)/combine.o: private rustc_target_flags = --extern alloc \
+    --extern build_error --extern macros --extern bindings --extern kernel \
+    --extern core  --extern memchr
+$(obj)/combine.o: $(src)/combine/lib.rs $(obj)/compiler_builtins.o $(obj)/std_macros.rs FORCE
+	$(call if_changed_dep,rustc_library)
+
+$(obj)/nom.o: private skip_clippy = 1
+$(obj)/nom.o: private skip_flags = -Dunreachable_pub
+$(obj)/nom.o: private rustc_target_flags = --extern alloc \
+    --extern build_error --extern macros --extern bindings --extern kernel \
+    --extern core --extern memchr
+$(obj)/nom.o: $(src)/nom/lib.rs $(obj)/compiler_builtins.o $(obj)/memchr.o $(obj)/std_macros.rs FORCE
+	$(call if_changed_dep,rustc_library)
+
+$(obj)/std_macros.o: $(src)/std_macros.rs $(obj)/compiler_builtins.o FORCE
 	$(call if_changed_dep,rustc_library)
 
 endif # CONFIG_RUST

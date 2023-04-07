@@ -189,3 +189,4 @@ pub fn vtable(attr: TokenStream, ts: TokenStream) -> TokenStream {
 pub fn concat_idents(ts: TokenStream) -> TokenStream {
     concat_idents::concat_idents(ts)
 }
+
